@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
+import { leadsAPI } from '../utils/api'
 import { FiSend, FiMapPin, FiPhone, FiMail, FiClock } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 
@@ -8,16 +9,29 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', service: '', budget: '', message: '' })
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    try {
-      const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-      if (res.ok) { toast.success('Message sent! We\'ll contact you within 24 hours.'); setForm({ name: '', email: '', phone: '', service: '', budget: '', message: '' }) }
-      else toast.error('Failed to send. Please try again.')
-    } catch { toast.error('Network error. Please try again.') }
-    setLoading(false)
+ const handleSubmit = async (e) => {
+  e.preventDefault()
+  setLoading(true)
+
+  try {
+    await leadsAPI.submit(form)
+
+    toast.success("Message sent! We'll contact you within 24 hours.")
+
+    setForm({
+      name: '',
+      email: '',
+      phone: '',
+      service: '',
+      budget: '',
+      message: ''
+    })
+  } catch (err) {
+    toast.error(err.message)
   }
+
+  setLoading(false)
+}
 
   return (
     <>
