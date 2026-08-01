@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../utils/api'
 
 const AuthContext = createContext()
 
@@ -10,10 +10,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('dmh-admin-token')
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      axios.get('/api/auth/me')
-        .then(res => setUser(res.data.user))
-        .catch(() => { localStorage.removeItem('dmh-admin-token'); delete axios.defaults.headers.common['Authorization'] })
+      api.get('/auth/me')
+        .then(res => setUser(res.user))
+        .catch(() => { localStorage.removeItem('dmh-admin-token') })
         .finally(() => setLoading(false))
     } else {
       setLoading(false)
@@ -21,17 +20,15 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (email, password) => {
-    const res = await axios.post('/api/auth/login', { email, password })
-    const { token, user } = res.data
+    const res = await api.post('/auth/login', { email, password })
+    const { token, user } = res
     localStorage.setItem('dmh-admin-token', token)
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
     setUser(user)
     return user
   }
 
   const logout = () => {
     localStorage.removeItem('dmh-admin-token')
-    delete axios.defaults.headers.common['Authorization']
     setUser(null)
   }
 
