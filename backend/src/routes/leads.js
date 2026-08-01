@@ -9,8 +9,13 @@ const sendLeadEmail = async (lead) => {
   if (!process.env.SMTP_USER) return
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST, port: process.env.SMTP_PORT,
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      family: 4, // force IPv4 — Render's IPv6 route to Gmail SMTP hangs/times out
+      connectionTimeout: 10000,
+      greetingTimeout: 10000
     })
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,

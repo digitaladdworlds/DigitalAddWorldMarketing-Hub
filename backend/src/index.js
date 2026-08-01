@@ -20,6 +20,10 @@ import mediaRoutes from './routes/media.js'
 const app = express()
 const PORT = process.env.PORT || 5000
 
+// Render sits behind a reverse proxy — trust the first hop so
+// express-rate-limit reads X-Forwarded-For correctly
+app.set('trust proxy', 1)
+
 // Connect DB
 connectDB()
 
