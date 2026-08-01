@@ -3,7 +3,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import { motion } from 'framer-motion'
 import { FiUsers, FiFileText, FiBriefcase, FiTrendingUp, FiMail, FiEye } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import api from '../../utils/api'
 
 const statCards = [
   { label: 'Total Leads', icon: FiUsers, color: 'from-blue-500 to-blue-700', key: 'leads', link: '/admin/leads' },
@@ -26,15 +26,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     Promise.all([
-      axios.get('/api/leads').catch(() => ({ data: { data: [] } })),
-      axios.get('/api/blog').catch(() => ({ data: { data: [] } })),
-      axios.get('/api/services').catch(() => ({ data: { data: [] } })),
-      axios.get('/api/projects').catch(() => ({ data: { data: [] } })),
+      api.get('/leads').catch(() => ({ data: [] })),
+      api.get('/blog').catch(() => ({ data: [] })),
+      api.get('/services').catch(() => ({ data: [] })),
+      api.get('/projects').catch(() => ({ data: [] })),
     ]).then(([leads, blogs, services, projects]) => {
-      const l = leads.data?.data || []
-      const b = blogs.data?.data || []
-      const s = services.data?.data || []
-      const p = projects.data?.data || []
+      const l = leads?.data || []
+      const b = blogs?.data || []
+      const s = services?.data || []
+      const p = projects?.data || []
       setStats({ leads: l.length, blogs: b.length, services: s.length, projects: p.length })
       setRecentLeads(l.slice(0, 5))
     }).finally(() => setLoading(false))

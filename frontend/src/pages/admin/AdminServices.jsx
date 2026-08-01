@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave } from 'react-icons/fi'
-import axios from 'axios'
+import api from '../../utils/api'
 import toast from 'react-hot-toast'
 
 const empty = { title: '', slug: '', description: '', icon: '', features: '', benefits: '', isActive: true }
@@ -17,14 +17,11 @@ export default function AdminServices() {
 
   const fetch = async () => {
     try {
-      const res = await axios.get('/api/services')
-      setServices(res.data?.data || [])
-    } catch {
-      setServices([
-        { _id: '1', title: 'Website Development', slug: 'website-development', description: 'High-performance websites built with React.', isActive: true },
-        { _id: '2', title: 'SEO Optimization', slug: 'seo', description: 'Rank higher with data-driven SEO strategies.', isActive: true },
-        { _id: '3', title: 'Digital Marketing', slug: 'digital-marketing', description: 'Full-funnel digital marketing for maximum ROI.', isActive: true },
-      ])
+      const res = await api.get('/services')
+      setServices(res?.data || [])
+    } catch (err) {
+      toast.error(err.message || 'Failed to load services')
+      setServices([])
     }
     setLoading(false)
   }
@@ -39,28 +36,30 @@ export default function AdminServices() {
     const payload = { ...form, features: form.features.split('\n').filter(Boolean), benefits: form.benefits.split('\n').filter(Boolean) }
     try {
       if (editId) {
-        await axios.put(`/api/services/${editId}`, payload)
+        await api.put(`/services/${editId}`, payload)
         setServices(services.map(s => s._id === editId ? { ...s, ...payload } : s))
         toast.success('Service updated!')
       } else {
-        const res = await axios.post('/api/services', payload)
-        setServices([...services, res.data?.data || { ...payload, _id: Date.now().toString() }])
+        const res = await api.post('/services', payload)
+        setServices([...services, res?.data || { ...payload, _id: Date.now().toString() }])
         toast.success('Service added!')
       }
       setModal(false)
-    } catch {
-      if (editId) { setServices(services.map(s => s._id === editId ? { ...s, ...payload } : s)); toast.success('Service updated!') }
-      else { setServices([...services, { ...payload, _id: Date.now().toString() }]); toast.success('Service added!') }
-      setModal(false)
+    } catch (err) {
+      toast.error(err.message || 'Failed to save service')
     }
     setSaving(false)
   }
 
   const remove = async (id) => {
     if (!confirm('Delete this service?')) return
-    try { await axios.delete(`/api/services/${id}`) } catch {}
-    setServices(services.filter(s => s._id !== id))
-    toast.success('Service deleted')
+    try {
+      await api.delete(`/services/${id}`)
+      setServices(services.filter(s => s._id !== id))
+      toast.success('Service deleted')
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete service')
+    }
   }
 
   return (

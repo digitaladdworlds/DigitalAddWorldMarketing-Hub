@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { motion } from 'framer-motion'
 import { FiSearch, FiTrash2, FiEdit2, FiMail, FiPhone, FiFilter } from 'react-icons/fi'
-import axios from 'axios'
+import api from '../../utils/api'
 import toast from 'react-hot-toast'
 
 const statusColors = {
@@ -22,15 +22,11 @@ export default function AdminLeads() {
 
   const fetchLeads = async () => {
     try {
-      const res = await axios.get('/api/leads')
-      setLeads(res.data?.data || [])
-    } catch {
-      // Demo data if API not connected
-      setLeads([
-        { _id: '1', name: 'Rajesh Gupta', email: 'rajesh@example.com', phone: '+91 98765 43210', service: 'SEO', budget: '₹25,000–₹50,000/month', message: 'Need SEO for e-commerce site', status: 'new', createdAt: new Date().toISOString() },
-        { _id: '2', name: 'Priya Sharma', email: 'priya@example.com', phone: '+91 87654 32109', service: 'Website Development', budget: '₹50,000–₹1,00,000/month', message: 'Need a new website for my business', status: 'contacted', createdAt: new Date(Date.now() - 86400000).toISOString() },
-        { _id: '3', name: 'Amit Jain', email: 'amit@jainexports.com', phone: '+91 76543 21098', service: 'Digital Marketing', budget: '₹1,00,000+/month', message: 'Full digital marketing package needed', status: 'converted', createdAt: new Date(Date.now() - 172800000).toISOString() },
-      ])
+      const res = await api.get('/leads')
+      setLeads(res?.data || [])
+    } catch (err) {
+      toast.error(err.message || 'Failed to load leads')
+      setLeads([])
     }
     setLoading(false)
   }
@@ -39,11 +35,11 @@ export default function AdminLeads() {
 
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`/api/leads/${id}`, { status })
+      await api.put(`/leads/${id}`, { status })
       setLeads(leads.map(l => l._id === id ? { ...l, status } : l))
       toast.success('Status updated')
-    } catch {
-      setLeads(leads.map(l => l._id === id ? { ...l, status } : l))
+    } catch (err) {
+      toast.error(err.message || 'Failed to update status')
     }
     setEditId(null)
   }
@@ -51,11 +47,11 @@ export default function AdminLeads() {
   const deleteLead = async (id) => {
     if (!confirm('Delete this lead?')) return
     try {
-      await axios.delete(`/api/leads/${id}`)
+      await api.delete(`/leads/${id}`)
       setLeads(leads.filter(l => l._id !== id))
       toast.success('Lead deleted')
-    } catch {
-      setLeads(leads.filter(l => l._id !== id))
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete lead')
     }
   }
 
