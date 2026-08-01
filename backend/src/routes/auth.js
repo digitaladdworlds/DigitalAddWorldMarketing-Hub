@@ -1,0 +1,29 @@
+import express from 'express'
+import jwt from 'jsonwebtoken'
+import User from '../models/User.js'
+import { protect } from '../middleware/auth.js'
+
+const router = express.Router()
+
+const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || '7d' })
+
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body
+    if (!email || !password) return res.status(400).json({ success: false, message: 'Please provide email and password' })
+    const user = await User.findOne({ email }).select('+password')
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' })
+    }
+    const token = signToken(user._id)
+    res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+})
+
+router.get('/me', protect, (req, res) => {
+  res.json({ success: true, user: req.user })
+})
+
+export default router
